@@ -34,7 +34,14 @@
     }:
     let
       system = "x86_64-linux";
-      pkgs = nixpkgs.legacyPackages.${system};
+      # allowUnfree: nixpkgs' linuxPackagesFor gjenbruker kernel.stdenv for
+      # out-of-tree-moduler, og stdenv-ens checkMeta arver DENNE instansens
+      # config - uten allowUnfree nekter nedstroms nvidia-modulen aa evaluere.
+      # Paavirker ikke kernelens drv-hash.
+      pkgs = import nixpkgs {
+        inherit system;
+        config.allowUnfree = true;
+      };
       variants = import ./nix/variants.nix {
         inherit
           pkgs

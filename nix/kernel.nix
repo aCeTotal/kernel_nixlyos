@@ -49,7 +49,7 @@ let
     "CC_OPTIMIZE_FOR_PERFORMANCE_O3=y"
     "TRANSPARENT_HUGEPAGE_ALWAYS=y"
     "LTO_CLANG_THIN=y"
-    "DEFAULT_TCP_CONG=.bbr."
+    "DEFAULT_TCP_CONG=.bbr3."
     march.check
   ];
 

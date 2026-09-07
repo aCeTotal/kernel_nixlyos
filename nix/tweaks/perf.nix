@@ -9,11 +9,12 @@
 
   "-e LTO_CLANG_THIN"
 
+  # I cachy-treet er BBR3 egen algoritme ("bbr3"); "bbr" er vanilla BBR v1.
   "-m TCP_CONG_CUBIC"
   "-d DEFAULT_CUBIC"
-  "-e TCP_CONG_BBR"
-  "-e DEFAULT_BBR"
-  "--set-str DEFAULT_TCP_CONG bbr"
+  "-e TCP_CONG_BBR3"
+  "-e DEFAULT_BBR3"
+  "--set-str DEFAULT_TCP_CONG bbr3"
   "-m NET_SCH_FQ_CODEL"
   "-e NET_SCH_FQ"
   "-d DEFAULT_FQ_CODEL"
