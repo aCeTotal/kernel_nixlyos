@@ -1,0 +1,7 @@
+# Byggeresultater (nix out-links og GC-røtter)
+result
+result-*
+cache/
+
+# Devshell-miljø
+.direnv/
