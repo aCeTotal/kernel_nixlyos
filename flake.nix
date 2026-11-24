@@ -86,7 +86,7 @@
       packages.${system} = {
         linux-nixlyos = variants.generic;
         linux-nixlyos-v3 = variants.v3;
-        linux-nixlyos-v4 = variants.v4;
+        linux-nixlyos-server = variants.server;
         linux-nixlyos-enterprise = variants.enterprise;
         default = variants.v3;
       };
@@ -95,14 +95,14 @@
       checks.${system} = {
         config-generic = variants.generic.configfile;
         config-v3 = variants.v3.configfile;
-        config-v4 = variants.v4.configfile;
+        config-server = variants.server.configfile;
         config-enterprise = variants.enterprise.configfile;
       };
 
       overlays.default = final: prev: {
         linuxPackages_nixlyos = final.linuxPackagesFor self.packages.${system}.linux-nixlyos;
         linuxPackages_nixlyos_v3 = final.linuxPackagesFor self.packages.${system}.linux-nixlyos-v3;
-        linuxPackages_nixlyos_v4 = final.linuxPackagesFor self.packages.${system}.linux-nixlyos-v4;
+        linuxPackages_nixlyos_server = final.linuxPackagesFor self.packages.${system}.linux-nixlyos-server;
         linuxPackages_nixlyos_enterprise = final.linuxPackagesFor self.packages.${system}.linux-nixlyos-enterprise;
       };
 

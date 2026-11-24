@@ -13,5 +13,4 @@ in
 {
   generic = level 1;
   v3 = level 3;
-  v4 = level 4;
 }

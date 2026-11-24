@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 mkdir -p cache
-for kernel in linux-nixlyos linux-nixlyos-v3 linux-nixlyos-v4 linux-nixlyos-enterprise; do
+for kernel in linux-nixlyos linux-nixlyos-v3 linux-nixlyos-enterprise; do
   nix build ".#$kernel" -o "cache/$kernel"
 done
 

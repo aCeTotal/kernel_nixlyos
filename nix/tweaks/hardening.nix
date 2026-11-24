@@ -1,4 +1,4 @@
-# Utover hardening.config i treet.
+# Herding utover hardening.config.
 [
   "-e EXPERT"
   "-d KEXEC"

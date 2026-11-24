@@ -1,4 +1,4 @@
-# Ytelse per CPU-nivå, pluss enterprise.
+# Desktop, server og enterprise.
 {
   pkgs,
   nixpkgs,
@@ -24,6 +24,10 @@ let
     else
       "${lib.versions.majorMinor srcVersion}.${sublevel (lib.last stable.patches)}";
   march = import ./tweaks/march.nix;
+  vanillaVersion = import ./version.nix {
+    inherit lib;
+    src = linux-vanilla;
+  };
 
   # Kjeden uten filer CachyOS endret.
   stablePatch = pkgs.runCommand "linux-stable-${version}.patch" { nativeBuildInputs = [ pkgs.patchutils ]; } ''
@@ -96,25 +100,16 @@ in
     localVersion = "-nixlyos-v3";
     march = march.v3;
   };
-  v4 = performance {
-    name = "linux-nixlyos-v4";
-    localVersion = "-nixlyos-v4";
-    march = march.v4;
-  };
-
   enterprise = import ./kernel.nix {
     inherit pkgs nixpkgs lib caCert;
     src = linux-vanilla;
-    version = import ./version.nix {
-      inherit lib;
-      src = linux-vanilla;
-    };
+    version = vanillaVersion;
     name = "linux-nixlyos-enterprise";
     localVersion = "-nixlyos-enterprise";
     patches = [ ./patches/secure-hibernation.patch ];
     vendorDrivers = "";
     baseConfig = "make $makeFlags defconfig hardening.config";
-    tweaks = import ./enterprise/hardening.nix ++ import ./enterprise/desktop.nix ++ import ./enterprise/hardware.nix;
+    tweaks = import ./tweaks/hardening.nix ++ import ./enterprise/desktop.nix ++ import ./enterprise/hardware.nix;
     checks = [
       "CFI=y"
       "INIT_ON_FREE_DEFAULT_ON=y"
@@ -150,6 +145,50 @@ in
       "DEBUG_FS"
       "FTRACE"
       "SECURITY_SELINUX"
+    ];
+  };
+
+  # Vanilla og herdet, med full maskinvaredekning.
+  server = import ./kernel.nix {
+    inherit pkgs nixpkgs lib caCert;
+    src = linux-vanilla;
+    version = vanillaVersion;
+    name = "linux-nixlyos-server";
+    localVersion = "-nixlyos-server";
+    patches = [ ./patches/secure-hibernation.patch ];
+    vendorDrivers = "";
+    baseConfig = "cp ${cachy-config}/linux-cachyos/config .config && make $makeFlags olddefconfig hardening.config";
+    tweaks = import ./tweaks/hardening.nix ++ import ./tweaks/server.nix;
+    checks = [
+      "INIT_ON_FREE_DEFAULT_ON=y"
+      "IOMMU_DEFAULT_DMA_STRICT=y"
+      "BPF_UNPRIV_DEFAULT_OFF=y"
+      "LTO_CLANG_THIN=y"
+      "HZ=1000"
+      "NO_HZ_IDLE=y"
+      "PREEMPT_LAZY=y"
+      "TRANSPARENT_HUGEPAGE_MADVISE=y"
+      "DEFAULT_TCP_CONG=.bbr."
+      "DEFAULT_FQ=y"
+      "LSM=.landlock,lockdown,yama."
+      "KVM=m"
+      "NFSD=m"
+      "BONDING=m"
+      "MD_RAID456=m"
+      "BINFMT_MISC=y"
+    ];
+    absent = [
+      "KEXEC"
+      "KEXEC_FILE"
+      "DEVMEM"
+      "IO_URING"
+      "PROC_KCORE"
+      "DEBUG_FS"
+      "FTRACE"
+      "PREEMPT"
+      "CFI"
+      "NO_HZ_FULL"
+      "TRANSPARENT_HUGEPAGE_ALWAYS"
     ];
   };
 }
