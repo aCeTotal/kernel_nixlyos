@@ -1,5 +1,4 @@
-# Runtime-triksene fra CachyOS (cachyos-settings) + scx_lavd, som NixOS-modul.
-# Kernel-siden (BORE, 1000Hz, tickless, NTSYNC, split lock av, m.m.) ligger i selve kernelen.
+# CachyOS-innstillinger for ytelseskjernen.
 self:
 {
   config,
@@ -41,11 +40,5 @@ self:
   zramSwap = {
     enable = lib.mkDefault true;
     algorithm = lib.mkDefault "zstd";
-  };
-
-  # scx_lavd: latency-aware scheduler for gaming/desktop, kjører oppå sched_ext.
-  services.scx = {
-    enable = lib.mkDefault true;
-    scheduler = lib.mkDefault "scx_lavd";
   };
 }

@@ -1,14 +1,16 @@
-# Bygger .config: CachyOS-distroconfig + våre tweaks, og verifiserer at de bet.
+# Grunnconfig, tweaks, verifisert.
 {
   stdenv,
   lib,
   src,
-  configSrc,
+  baseConfig,
   kernelVersion,
   tweaks,
   checks,
+  absent,
   commonMakeFlags,
   patches,
+  vendorDrivers,
   bison,
   flex,
   perl,
@@ -26,6 +28,7 @@ stdenv.mkDerivation {
   pname = "nixlyos-kernel-config";
   version = kernelVersion;
   inherit src patches;
+  postPatch = vendorDrivers;
 
   nativeBuildInputs = [
     bison
@@ -48,8 +51,8 @@ stdenv.mkDerivation {
   buildPhase = ''
     runHook preBuild
 
-    cp ${configSrc}/linux-cachyos/config .config
     patchShebangs scripts/
+    ${baseConfig}
     make $makeFlags olddefconfig
     scripts/config ${tweaks}
     make $makeFlags olddefconfig
@@ -65,6 +68,12 @@ stdenv.mkDerivation {
     for opt in ${toString checks}; do
       if ! grep -q "^CONFIG_$opt" .config; then
         echo "FEIL: CONFIG_$opt mangler i generert .config" >&2
+        status=1
+      fi
+    done
+    for opt in ${toString absent}; do
+      if grep -q "^CONFIG_$opt=" .config; then
+        echo "FEIL: CONFIG_$opt er fortsatt på" >&2
         status=1
       fi
     done

@@ -1,5 +1,4 @@
-# CPU-arkitektur per variant (tilsvarer _processor_opt=generic_v1/v3).
-# generic (v1) støtter alle x86-64-CPUer, v3 utnytter AVX2-generasjonen.
+# x86-64-nivå per variant.
 let
   level = v: {
     flags = [
@@ -14,4 +13,5 @@ in
 {
   generic = level 1;
   v3 = level 3;
+  v4 = level 4;
 }

@@ -1,18 +1,15 @@
 #!/usr/bin/env bash
-# Bygger begge kernelvariantene og fester dem som GC-røtter i ./cache/,
-# slik at de overlever nix-collect-garbage og alltid er klare til bruk.
+# Fester alle kernels som GC-røtter.
 set -euo pipefail
 cd "$(dirname "$0")"
 
 mkdir -p cache
-nix build .#linux-nixlyos -o cache/linux-nixlyos
-nix build .#linux-nixlyos-v3 -o cache/linux-nixlyos-v3
+for kernel in linux-nixlyos linux-nixlyos-v3 linux-nixlyos-v4 linux-nixlyos-enterprise; do
+  nix build ".#$kernel" -o "cache/$kernel"
+done
 
 echo
 echo "Cachet:"
 for l in cache/*; do
   echo "  $l -> $(readlink "$l")"
 done
-echo
-echo "Kopier til annen maskin (bygger ingenting der):"
-echo "  nix copy --to ssh://bruker@maskin \$(readlink cache/linux-nixlyos-v3)"

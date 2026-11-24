@@ -1,21 +1,25 @@
-# Setter sammen én kernelvariant: clang/thin-LTO-verktøykjede, .config og bygg.
+# Én kernel: clang thin-LTO, config, bygg.
 {
   pkgs,
   nixpkgs,
   lib,
   src,
-  configSrc,
   version,
   name,
   localVersion,
-  march,
   patches,
+  vendorDrivers,
+  caCert,
+  baseConfig,
+  tweaks,
+  checks,
+  absent ? [ ],
 }:
 let
   llvmPackages = pkgs.llvmPackages_latest;
   stdenv = llvmPackages.stdenv;
 
-  # thin-LTO krever lld og llvm-binutils; wrappede versjoner brekker kernel-linking.
+  # Wrappede binutils brekker thin-LTO.
   llvmFlags = [
     "LD=${lib.getExe' llvmPackages.lld "ld.lld"}"
     "AR=${lib.getExe' llvmPackages.llvm "llvm-ar"}"
@@ -28,42 +32,31 @@ let
     extraMakeFlags = llvmFlags;
   };
 
-  tweaks = lib.concatStringsSep " " (
-    import ./tweaks/base.nix
-    ++ import ./tweaks/timing.nix
-    ++ import ./tweaks/perf.nix
-    ++ march.flags
-    ++ [
-      "--set-str LOCALVERSION ${localVersion}"
-      "-d LOCALVERSION_AUTO"
-    ]
-  );
-
-  # Verifisering: bygget feiler hvis noen av disse mangler i ferdig .config.
-  checks = [
-    "SCHED_BORE=y"
-    "SCHED_CLASS_EXT=y"
-    "HZ=1000"
-    "NO_HZ_FULL=y"
-    "PREEMPT=y"
-    "CC_OPTIMIZE_FOR_PERFORMANCE_O3=y"
-    "TRANSPARENT_HUGEPAGE_ALWAYS=y"
-    "LTO_CLANG_THIN=y"
-    "DEFAULT_TCP_CONG=.bbr3."
-    march.check
-  ];
-
   configfile = pkgs.callPackage ./configfile.nix {
     inherit
       stdenv
       src
-      configSrc
-      tweaks
-      checks
+      baseConfig
       commonMakeFlags
       patches
+      vendorDrivers
+      absent
       ;
     kernelVersion = version;
+    tweaks = lib.concatStringsSep " " (
+      tweaks
+      ++ import ./tweaks/security.nix caCert
+      ++ [
+        "--set-str LOCALVERSION ${localVersion}"
+        "-d LOCALVERSION_AUTO"
+      ]
+    );
+    checks = checks ++ [
+      "SECURITYFS=y"
+      "MODULE_SIG_FORCE=y"
+      "LOCK_DOWN_KERNEL_FORCE_CONFIDENTIALITY=y"
+      "HIBERNATION=y"
+    ];
   };
 in
 (pkgs.linuxManualConfig {
@@ -80,7 +73,6 @@ in
     name = builtins.baseNameOf p;
     patch = p;
   }) patches;
-  isZen = true;
   features = {
     efiBootStub = true;
     ia32Emulation = true;
@@ -88,7 +80,8 @@ in
 }).overrideAttrs
   (prev: {
     pname = name;
+    postPatch = (prev.postPatch or "") + vendorDrivers;
     passthru = prev.passthru // {
-      inherit configfile;
+      inherit configfile caCert;
     };
   })
